@@ -1,0 +1,16 @@
+langchain 
+wikipedia 
+langchain-community 
+langchain-openai
+langchain-anthropic
+python-dotenv
+pydantic
+duckduckgo-search
+Flask
+gunicorn
+tools
+datetime 
+bs4 
+playwright
+json
+re
