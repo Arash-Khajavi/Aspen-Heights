@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot UI</title>
+    <style>
+      #chatbot-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      #chatbox {
+        display: none;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 300px;
+        height: 400px;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+      }
+
+      #chat-messages {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+        font-size: 14px;
+      }
+
+      .message {
+        margin: 5px 0;
+        padding: 8px;
+        border-radius: 8px;
+        max-width: 80%;
+        word-wrap: break-word;
+      }
+
+      .user {
+        background: #dcf8c6;
+        align-self: flex-end;
+      }
+
+      .bot {
+        background: #f1f0f0;
+        align-self: flex-start;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        border-top: 1px solid #ccc;
+      }
+
+      form input[type="text"] {
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        margin-bottom: 5px;
+      }
+
+      form input[type="submit"] {
+        padding: 8px;
+        border-radius: 5px;
+        border: none;
+        background: #4caf50;
+        color: white;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Floating chatbot button -->
+    <button id="chatbot-button">💬</button>
+
+    <!-- Chatbox -->
+    <div id="chatbox">
+      <div id="chat-messages"></div>
+      <div id="chat-form-element">
+        <form id="message-form" action="/" method="POST">
+          <input type="text" id="user1" name="user1" required placeholder="Ask a question..." />
+          <label for="user1">Message</label>
+          <input type="submit" value="Send" />
+        </form>
+      </div>
+    </div>
+    <script>
+      const chatbotButton = document.getElementById("chatbot-button");
+      const chatbox = document.getElementById("chatbox");
+      const messageForm = document.getElementById("message-form");
+      const chatMessages = document.getElementById("chat-messages");
+      const userInput = document.getElementById("user1");
+      // Toggle chatbox visibility
+      chatbotButton.addEventListener("click", () => {
+        chatbox.style.display =
+          chatbox.style.display === "flex" ? "none" : "flex";
+      });
+
+      // Intercept form submit
+      messageForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const userText = userInput.value.trim();
+        if (!userText) return;
+
+        // Show user message
+        const userMsg = document.createElement("div");
+        userMsg.className = "message user";
+        userMsg.innerText = userText;
+        chatMessages.appendChild(userMsg);
+
+        // Scroll down
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Clear input field
+        userInput.value = "";
+
+        // Call backend via fetch (AJAX)
+        try {
+          const res = await fetch("/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user1: userText }),
+          });
+          const data = await res.json(); // Flask sends jsonify
+
+          // Display bot response
+          const botMsg = document.createElement("div");
+          botMsg.className = "message bot";
+
+          // Check if we have a structured response or error
+          if (data.error) {
+            botMsg.innerText = "⚠️ Error: " + data.error;
+          } else if (data.output) {
+            botMsg.innerText = data.output;
+          } else {
+            botMsg.innerText = JSON.stringify(data);
+          }
+
+          chatMessages.appendChild(botMsg);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        } catch (err) {
+          const errorMsg = document.createElement("div");
+          errorMsg.className = "message bot";
+          errorMsg.innerText = "⚠️ Error: " + err;
+          chatMessages.appendChild(errorMsg);
+        }
+      });
+    </script>
+  </body>
+</html>
